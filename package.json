@@ -1,0 +1,23 @@
+{
+  "name": "tex-to-svg",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jongwook/tex-to-svg.git"
+  },
+  "author": "Jong Wook Kim",
+  "bugs": {
+    "url": "https://github.com/jongwook/tex-to-svg/issues"
+  },
+  "private": true,
+  "dependencies": {
+    "express": "^4.13.3",
+    "hogan-express": "^0.5.2",
+    "mathjax-node": "^0.4.0"
+  }
+}
