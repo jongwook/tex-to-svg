@@ -1,6 +1,18 @@
-var http = require('http')
+var zlib = require('zlib');
+var express = require('express');
+var app = express();
+
+app.use('/static', express.static('public'));
+
+app.get('/', function (req, res) {
+  res.send('Hello World!');
+});
+
 var port = process.env.PORT || 1337;
-http.createServer(function(req, res) {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Hello World\n');
-}).listen(port);
+var server = app.listen(port, function() {
+  var host = server.address().address;
+  var port = server.address().port;
+
+  console.log('tex-to-svg server listening at http://%s:%s', host, port);
+});
+
