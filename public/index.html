@@ -11,50 +11,176 @@
 </script>
 <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG"></script>
 <style type="text/css">
+body {
+  margin: 0;
+}
+
+#display {
+  position: absolute;
+  top: 100px;
+  bottom: 40vh;
+  width: 100vw;
+  display: flex;
+  align-items: center;
+}
+
+#menu {
+  background: #eee;
+  position: absolute;
+  width: 100%;
+  height: 10vh;
+  top: 0;
+  right: 0;
+}
+
 #editor {
   margin: 0;
   position: absolute;
-  top: 0;
+  height: 40vh;
   bottom: 0;
   left: 0;
+  right: 0 /* 400px */;
+}
+
+#adsense {
+  position: absolute;
+  width: 0 /* 400px */;
+  height: 40vh;
+  bottom: 0;
   right: 0;
 }
+
+.math-display {
+  margin: auto;
+}
+
 </style>
 </head>
 <body>
 <script>
-  !function () {
-    var QUEUE = MathJax.Hub.queue;  // shorthand for the queue
-    var math = null;                // the element jax for the math output.
+var Preview = {
+  delay: 150,        // delay after keystroke before updating
 
-    //
-    //  Get the element jax when MathJax has produced it.
-    //
-    QUEUE.Push(function () {
-      math = MathJax.Hub.getAllJax("MathOutput")[0];
-    });
+  preview: null,     // filled in by Init below
+  buffer: null,      // filled in by Init below
 
-    //
-    //  The onchange event handler that typesets the
-    //  math entered by the user
-    //
-    window.UpdateMath = function (TeX) {
-      QUEUE.Push(["Text",math,"\\displaystyle{"+TeX+"}"]);
-    }
-  }();
+  timeout: null,     // store setTimout id
+  mjRunning: false,  // true when MathJax is processing
+  oldText: null,     // used to check if an update is needed
+
+  //
+  //  Get the preview and buffer DIV's
+  //
+  Init: function () {
+    this.preview = document.getElementById("MathPreview");
+    this.buffer = document.getElementById("MathBuffer");
+  },
+
+  //
+  //  Switch the buffer and preview, and display the right one.
+  //  (We use visibility:hidden rather than display:none since
+  //  the results of running MathJax are more accurate that way.)
+  //
+  SwapBuffers: function () {
+    var buffer = this.preview, preview = this.buffer;
+    this.buffer = buffer; this.preview = preview;
+    buffer.style.visibility = "hidden"; buffer.style.position = "absolute";
+    preview.style.position = ""; preview.style.visibility = "";
+  },
+
+  //
+  //  This gets called when a key is pressed in the textarea.
+  //  We check if there is already a pending update and clear it if so.
+  //  Then set up an update to occur after a small delay (so if more keys
+  //    are pressed, the update won't occur until after there has been 
+  //    a pause in the typing).
+  //  The callback function is set up below, after the Preview object is set up.
+  //
+  Update: function () {
+    if (this.timeout) {clearTimeout(this.timeout)}
+    this.timeout = setTimeout(this.callback, this.delay);
+  },
+
+  //
+  //  Creates the preview and runs MathJax on it.
+  //  If MathJax is already trying to render the code, return
+  //  If the text hasn't changed, return
+  //  Otherwise, indicate that MathJax is running, and start the
+  //    typesetting.  After it is done, call PreviewDone.
+  //  
+  CreatePreview: function () {
+    Preview.timeout = null;
+    if (this.mjRunning) return;
+    var text = window.editor.getValue();
+    if (text === this.oldtext) return;
+    this.buffer.innerHTML = this.oldtext = text;
+    this.mjRunning = true;
+    MathJax.Hub.Queue(
+      ["Typeset",MathJax.Hub,this.buffer],
+      ["PreviewDone",this]
+    );
+  },
+
+  //
+  //  Indicate that MathJax is no longer running,
+  //  and swap the buffers to show the results.
+  //
+  PreviewDone: function () {
+    this.mjRunning = false;
+    this.SwapBuffers();
+  }
+};
+
+//
+//  Cache a callback to the CreatePreview action
+//
+Preview.callback = MathJax.Callback(["CreatePreview",Preview]);
+Preview.callback.autoReset = true;  // make sure it can run more than once
 </script>
 
-<div id="MathOutput">
-You typed: ${}$
+<div id="display">
+  <div id="MathPreview" class="math-display"></div>
+  <div id="MathBuffer" class="math-display" style="visibility:hidden; position:absolute; top:0; left: 0"></div>
 </div>
+
+<div id="menu">
+</div>
+
 <!--<textarea id="MathInput" size="50" onkeyup="UpdateMath(this.value)"></textarea>-->
-<pre id="editor">E = mc^2</pre>
+<pre id="editor">\begin{eqnarray}
+  \nabla \cdot \mathbf{E} & = & \frac {\rho} {\varepsilon_0} \\
+  \nabla \cdot \mathbf{B} & = & 0 \\
+  \nabla \times \mathbf{E} & = & - \frac {\partial \mathbf{B}}{\partial t} \\
+  \nabla \times \mathbf{B} & = & \mu_0 \left ( J + \varepsilon_0 \frac {\partial \mathbf{E}}{\partial t} \right )
+\end{eqnarray}</pre>
 <script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
+
+
 <script>
-var editor = ace.edit("editor");
+editor = ace.edit("editor");
 editor.setTheme("ace/theme/xcode");
 editor.session.setMode("ace/mode/latex");
+Preview.Init();
+Preview.Update();
+editor.on("change", function(e) {
+  Preview.Update();
+})
 </script>
+
+<!--
+<div id="adsense">
+<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-2331024950757421"
+     data-ad-slot="8802204876"
+     data-ad-format="auto"></ins>
+<script>
+(adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+</div>
+-->
+
 </body>
 </html>
 
