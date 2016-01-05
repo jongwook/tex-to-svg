@@ -2,178 +2,13 @@
 <html>
 <head>
 <title>TeX to SVG</title>
-<script type="text/x-mathjax-config">
-  MathJax.Hub.Config({
-    tex2jax: {
-      inlineMath: [["$","$"],["\\(","\\)"]]
-    }
-  });
-</script>
+<script type="text/x-mathjax-config">MathJax.Hub.Config({tex2jax:{inlineMath: [["$","$"],["\\(","\\)"]]}});</script>
 <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG"></script>
-<style type="text/css">
-body {
-  margin: 0;
-}
-
-#display {
-  position: absolute;
-  top: 0;
-  bottom: 50vh;
-  width: 100vw;
-  display: flex;
-  align-items: center;
-}
-
-#menu {
-  background: #f8f8f8;
-  position: absolute;
-  width: 100%;
-  height: 60px;
-  top: 50vh;
-  right: 0;
-  text-align: left;
-  line-height: 60px;
-  border-top: 1px solid #ddd;
-  border-bottom: 1px solid #ddd;
-  box-sizing: border-box;
-}
-
-#menu button {
-  color: white;
-  border: 0;
-  height: 40px;
-  padding: 0;
-  font-size: 12pt;
-  cursor: pointer;
-}
-
-#menu button.create {
-  background: #68f;
-  width: 200px;
-  margin-left: 10px;
-}
-
-#menu input.url {
-  width: calc(100vw - 350px);
-  height: 40px;
-  border: 0;
-  padding: 0;
-  margin-left: 10px;
-  margin-right: 10px; 
-  position: relative;
-  top: -2px;
-}
-
-#menu button.clear {
-  background: #999;
-  width: 100px;
-  margin-right: 10px;
-}
-
-#editor {
-  margin: 0;
-  position: absolute;
-  height: calc(50vh - 60px);
-  bottom: 0;
-  left: 0;
-  right: 0 /* 400px */;
-}
-
-#adsense {
-  position: absolute;
-  width: 0 /* 400px */;
-  height: 40vh;
-  bottom: 0;
-  right: 0;
-}
-
-.math-display {
-  margin: auto;
-}
-
-</style>
+<script type="text/javascript" src="preview.js"></script>
+<script type="text/javascript" src="jquery-2.1.4.min.js"></script>
+<link rel="stylesheet" type="text/css" href="style.css">
 </head>
 <body>
-<script>
-var Preview = {
-  delay: 150,        // delay after keystroke before updating
-
-  preview: null,     // filled in by Init below
-  buffer: null,      // filled in by Init below
-
-  timeout: null,     // store setTimout id
-  mjRunning: false,  // true when MathJax is processing
-  oldText: null,     // used to check if an update is needed
-
-  //
-  //  Get the preview and buffer DIV's
-  //
-  Init: function () {
-    this.preview = document.getElementById("MathPreview");
-    this.buffer = document.getElementById("MathBuffer");
-  },
-
-  //
-  //  Switch the buffer and preview, and display the right one.
-  //  (We use visibility:hidden rather than display:none since
-  //  the results of running MathJax are more accurate that way.)
-  //
-  SwapBuffers: function () {
-    var buffer = this.preview, preview = this.buffer;
-    this.buffer = buffer; this.preview = preview;
-    buffer.style.visibility = "hidden"; buffer.style.position = "absolute";
-    preview.style.position = ""; preview.style.visibility = "";
-  },
-
-  //
-  //  This gets called when a key is pressed in the textarea.
-  //  We check if there is already a pending update and clear it if so.
-  //  Then set up an update to occur after a small delay (so if more keys
-  //    are pressed, the update won't occur until after there has been 
-  //    a pause in the typing).
-  //  The callback function is set up below, after the Preview object is set up.
-  //
-  Update: function () {
-    if (this.timeout) {clearTimeout(this.timeout)}
-    this.timeout = setTimeout(this.callback, this.delay);
-  },
-
-  //
-  //  Creates the preview and runs MathJax on it.
-  //  If MathJax is already trying to render the code, return
-  //  If the text hasn't changed, return
-  //  Otherwise, indicate that MathJax is running, and start the
-  //    typesetting.  After it is done, call PreviewDone.
-  //  
-  CreatePreview: function () {
-    Preview.timeout = null;
-    if (this.mjRunning) return;
-    var text = window.editor.getValue();
-    if (text === this.oldtext) return;
-    this.buffer.innerHTML = this.oldtext = text;
-    this.mjRunning = true;
-    MathJax.Hub.Queue(
-      ["Typeset",MathJax.Hub,this.buffer],
-      ["PreviewDone",this]
-    );
-  },
-
-  //
-  //  Indicate that MathJax is no longer running,
-  //  and swap the buffers to show the results.
-  //
-  PreviewDone: function () {
-    this.mjRunning = false;
-    this.SwapBuffers();
-  }
-};
-
-//
-//  Cache a callback to the CreatePreview action
-//
-Preview.callback = MathJax.Callback(["CreatePreview",Preview]);
-Preview.callback.autoReset = true;  // make sure it can run more than once
-</script>
 
 <div id="display">
   <div id="MathPreview" class="math-display"></div>
@@ -181,8 +16,8 @@ Preview.callback.autoReset = true;  // make sure it can run more than once
 </div>
 
 <div id="menu">
-  <button class="create" onfocus="blur();">Create Permalink</button>
-  <input type="text" class="url" disabled />
+  <button class="create" onfocus="blur();" onclick="Preview.Submit();">Create Permalink</button>
+  <input id="svg-url" class="url" type="text" onclick="Preview.CopyURL();"></input>
   <button class="clear" onfocus="blur();" onclick="editor">Clear</button>
 </div>
 
@@ -195,32 +30,5 @@ Preview.callback.autoReset = true;  // make sure it can run more than once
 \end{eqnarray}</pre>
 <script src="ace/ace.js" type="text/javascript" charset="utf-8"></script>
 
-
-<script>
-editor = ace.edit("editor");
-editor.setTheme("ace/theme/xcode");
-editor.session.setMode("ace/mode/latex");
-Preview.Init();
-Preview.Update();
-editor.on("change", function(e) {
-  Preview.Update();
-})
-</script>
-
-<!--
-<div id="adsense">
-<script async src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-2331024950757421"
-     data-ad-slot="8802204876"
-     data-ad-format="auto"></ins>
-<script>
-(adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-</div>
--->
-
 </body>
 </html>
-
